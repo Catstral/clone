@@ -1,0 +1,6 @@
+[test]
+concurrentTestGlob = "**/*.test.ts"
+rerunEach = 3
+coverage = true
+coverageSkipTestFiles = true
+randomize = true

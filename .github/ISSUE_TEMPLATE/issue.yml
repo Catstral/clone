@@ -1,5 +1,5 @@
 name: Issue
-description: Report a bug or request a feature/new utility
+description: Report a bug or request a feature
 labels:
   - "Needs traige"
 body:
@@ -23,4 +23,4 @@ body:
     id: version
     attributes:
       label: Package version
-      description: Which version of levy-utils are you using?
+      description: Which version of @catstral/clone are you using?
