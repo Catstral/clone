@@ -1,12 +1,5 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const TEMPORAL_INSTANT_CLONE_HANDLER = {
-	checker: (v): v is Temporal.Instant => {
-		if (typeof Temporal === "undefined" || typeof Temporal.Instant === "undefined") {
-			return false;
-		}
-
-		return v instanceof Temporal.Instant;
-	},
-	clone: (v) => Temporal.Instant.from(v),
-} satisfies CloneHandler<Temporal.Instant>;
+export const TEMPORAL_INSTANT_CLONER = ((v) => {
+	return Temporal.Instant.from(v);
+}) satisfies CloneHandlerClone<Temporal.Instant>;

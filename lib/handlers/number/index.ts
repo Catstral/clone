@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const NUMBER_CLONE_HANDLER = {
-	checker: (v) => typeof v === "number",
-	clone: (v) => v,
-} satisfies CloneHandler<number>;
+export const NUMBER_CLONER = ((v) => v) satisfies CloneHandlerClone<number>;

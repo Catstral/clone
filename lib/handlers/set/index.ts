@@ -1,14 +1,11 @@
-import type { CloneHandler } from "~/cloner";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const SET_CLONE_HANDLER = {
-	checker: (v) => v instanceof Set,
-	clone: (v, cloner) => {
-		const cloned = new Set();
+export const SET_CLONER = ((v, cloner) => {
+	const cloned = new Set();
 
-		for (const value of v) {
-			cloned.add(cloner.clone(value));
-		}
+	for (const value of v) {
+		cloned.add(cloner.clone(value, true));
+	}
 
-		return cloned;
-	},
-} satisfies CloneHandler<Set<unknown>>;
+	return cloned;
+}) satisfies CloneHandlerClone<Set<unknown>>;

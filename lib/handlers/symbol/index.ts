@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner.ts";
 
-export const SYMBOL_CLONE_HANDLER = {
-	checker: (v) => typeof v === "symbol",
-	clone: (v) => v,
-} satisfies CloneHandler<symbol>;
+export const SYMBOL_CLONER = ((v) => v) satisfies CloneHandlerClone<symbol>;

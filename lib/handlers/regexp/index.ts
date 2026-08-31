@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner.ts";
 
-export const REGEXP_CLONE_HANDLER = {
-	checker: (v) => v instanceof RegExp,
-	clone: (v) => new RegExp(v),
-} satisfies CloneHandler<RegExp>;
+export const REGEXP_CLONE_HANDLER = ((v) => new RegExp(v)) satisfies CloneHandlerClone<RegExp>;

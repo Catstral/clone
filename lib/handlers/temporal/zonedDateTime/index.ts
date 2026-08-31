@@ -1,12 +1,5 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const TEMPORAL_ZONED_DATE_TIME_CLONE_HANDLER = {
-	checker: (v): v is Temporal.ZonedDateTime => {
-		if (typeof Temporal === "undefined" || typeof Temporal.ZonedDateTime === "undefined") {
-			return false;
-		}
-
-		return v instanceof Temporal.ZonedDateTime;
-	},
-	clone: (v) => Temporal.ZonedDateTime.from(v),
-} satisfies CloneHandler<Temporal.ZonedDateTime>;
+export const TEMPORAL_ZONED_DATE_TIME_CLONER = ((v) => {
+	return Temporal.ZonedDateTime.from(v);
+}) satisfies CloneHandlerClone<Temporal.ZonedDateTime>;

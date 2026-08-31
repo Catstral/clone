@@ -1,12 +1,5 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const TEMPORAL_DURATION_CLONE_HANDLER = {
-	checker: (v): v is Temporal.Duration => {
-		if (typeof Temporal === "undefined" || typeof Temporal.Duration === "undefined") {
-			return false;
-		}
-
-		return v instanceof Temporal.Duration;
-	},
-	clone: (v) => Temporal.Duration.from(v),
-} satisfies CloneHandler<Temporal.Duration>;
+export const TEMPORAL_DURATION_CLONER = ((v) => {
+	return Temporal.Duration.from(v);
+}) satisfies CloneHandlerClone<Temporal.Duration>;

@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const STRING_CLONE_HANDLER = {
-	checker: (v) => typeof v === "string",
-	clone: (v) => v,
-} satisfies CloneHandler<string>;
+export const STRING_CLONER = ((v) => v) satisfies CloneHandlerClone<string>;

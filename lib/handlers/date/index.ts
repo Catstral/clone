@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner.ts";
 
-export const DATE_CLONE_HANDLER = {
-	checker: (v) => v instanceof Date,
-	clone: (v) => new Date(v),
-} satisfies CloneHandler<Date>;
+export const DATE_CLONER = ((v) => new Date(v)) satisfies CloneHandlerClone<Date>;

@@ -1,12 +1,5 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner";
 
-export const TEMPORAL_PLAIN_MONTH_DAY_CLONE_HANDLER = {
-	checker: (v): v is Temporal.PlainMonthDay => {
-		if (typeof Temporal === "undefined" || typeof Temporal.PlainMonthDay === "undefined") {
-			return false;
-		}
-
-		return v instanceof Temporal.PlainMonthDay;
-	},
-	clone: (v) => Temporal.PlainMonthDay.from(v),
-} satisfies CloneHandler<Temporal.PlainMonthDay>;
+export const TEMPORAL_PLAIN_MONTH_DAY_CLONER = ((v) => {
+	return Temporal.PlainMonthDay.from(v);
+}) satisfies CloneHandlerClone<Temporal.PlainMonthDay>;

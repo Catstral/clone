@@ -1,6 +1,3 @@
-import type { CloneHandler } from "~/cloner.ts";
+import type { CloneHandlerClone } from "~/cloner.ts";
 
-export const BOOLEAN_CLONE_HANDLER = {
-	checker: (v) => typeof v === "boolean",
-	clone: (v) => v,
-} satisfies CloneHandler<boolean>;
+export const BOOLEAN_CLONER = ((v) => v) satisfies CloneHandlerClone<boolean>;
