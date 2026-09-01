@@ -323,6 +323,15 @@ export class Cloner {
 	/**
 	 * Deep-clone a value.
 	 *
+	 * @throws {ClonerError} If any value is missing a handler, it will throw intead of clone.
+	 */
+	public cloneStrict<T>(this: Cloner, value: T): T {
+		return this.clone(value, true);
+	}
+
+	/**
+	 * Deep-clone a value.
+	 *
 	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
 	 *
 	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
