@@ -49,7 +49,8 @@
 		"lint": "biome check . --formatter-enabled=true",
 		"lint:apply": "biome check . --formatter-enabled=true --write",
 		"lint:apply:unsafe": "biome check . --formatter-enabled=true --write --unsafe",
-		"check": "bun tsc && bun lint"
+		"check": "bun tsc && bun lint",
+		"checkp": "bun run --parallel tsc lint"
 	},
 	"devDependencies": {
 		"@types/bun": "1.4.0",
