@@ -77,8 +77,8 @@ export interface CloneHandler<T> {
 }
 
 export class Cloner {
-	private static registry: CloneHandler<unknown>[] = [];
-	private static registryWithIds: Map<string, CloneHandler<unknown>> = new Map();
+	static #globalRegistry: CloneHandler<unknown>[] = [];
+	static #globalRegistryWithIds: Map<string, CloneHandler<unknown>> = new Map();
 
 	/**
 	 * Registers a new handler to the global registry. If that handler has an ID, then it will be synced to an ID based registry
@@ -99,7 +99,7 @@ export class Cloner {
 				throw new ClonerError("Got a checker function, but is missing a cloning function");
 			}
 
-			Cloner.registry.push({
+			Cloner.#globalRegistry.push({
 				checker: handlerOrChecker,
 				clone,
 			} as CloneHandler<unknown>);
@@ -108,18 +108,18 @@ export class Cloner {
 		}
 
 		if (typeof handlerOrChecker.id === "string") {
-			if (Cloner.registryWithIds.has(handlerOrChecker.id)) {
+			if (Cloner.#globalRegistryWithIds.has(handlerOrChecker.id)) {
 				throw new ClonerError(
 					`A handler with the given ID of '${handlerOrChecker.id}' has already been registered`,
 				);
 			}
 
-			Cloner.registryWithIds.set(handlerOrChecker.id, handlerOrChecker as CloneHandler<unknown>);
+			Cloner.#globalRegistryWithIds.set(handlerOrChecker.id, handlerOrChecker as CloneHandler<unknown>);
 
 			return;
 		}
 
-		Cloner.registry.push(handlerOrChecker as CloneHandler<unknown>);
+		Cloner.#globalRegistry.push(handlerOrChecker as CloneHandler<unknown>);
 	}
 
 	/**
@@ -137,7 +137,7 @@ export class Cloner {
 			throw new ClonerError(`The specified ID '${id}' and handler ID '${handler.id}' do not match`);
 		}
 
-		Cloner.registryWithIds.set(id, {
+		Cloner.#globalRegistryWithIds.set(id, {
 			...handler,
 			id,
 		} as CloneHandler<unknown>);
@@ -151,33 +151,33 @@ export class Cloner {
 	 * Do note that after init of a cloner, if something is registered here it will not be part of that instance.
 	 */
 	public static removeHandler(id: string): void {
-		Cloner.registryWithIds.delete(id);
+		Cloner.#globalRegistryWithIds.delete(id);
 	}
 
 	/**
 	 * Returns a new Cloner instance based on a cloner instance.
 	 */
-	static from(cloner: Cloner): Cloner {
+	public static from(cloner: Cloner): Cloner {
 		const cloned = new Cloner();
 
-		cloned.registry = cloner.registry;
-		cloned.registryWithIds = cloner.registryWithIds;
+		cloned.#registry = cloner.#registry;
+		cloned.#registryWithIds = cloner.#registryWithIds;
 
 		return cloned;
 	}
 
-	private registry: CloneHandler<unknown>[];
-	private registryWithIds: Map<string, CloneHandler<unknown>>;
-	private internalRegistry: Map<ConstructorFunction, CloneHandlerClone<unknown>> = new Map();
+	#registry: CloneHandler<unknown>[];
+	#registryWithIds: Map<string, CloneHandler<unknown>>;
+	#internalRegistry: Map<ConstructorFunction, CloneHandlerClone<unknown>> = new Map();
 
 	public constructor() {
-		this.registry = Cloner.registry;
-		this.registryWithIds = Cloner.registryWithIds;
+		this.#registry = Cloner.#globalRegistry;
+		this.#registryWithIds = Cloner.#globalRegistryWithIds;
 
-		this.handleInternalRegistry();
+		this.#handleInternalRegistry();
 	}
 
-	private registerInternalHandler<T>(
+	#registerInternalHandler<T>(
 		constructorFunction: ConstructorFunction | undefined,
 		handler: CloneHandlerClone<T>,
 	): void {
@@ -185,64 +185,64 @@ export class Cloner {
 			return;
 		}
 
-		this.internalRegistry.set(constructorFunction, handler as CloneHandlerClone<unknown>);
+		this.#internalRegistry.set(constructorFunction, handler as CloneHandlerClone<unknown>);
 	}
 
-	private handleInternalRegistry(): void {
-		this.registerInternalHandler(String, STRING_CLONER);
-		this.registerInternalHandler(Number, NUMBER_CLONER);
-		this.registerInternalHandler(Boolean, BOOLEAN_CLONER);
-		this.registerInternalHandler(Symbol, SYMBOL_CLONER);
-		this.registerInternalHandler(BigInt, BIGINT_CLONER);
+	#handleInternalRegistry(): void {
+		this.#registerInternalHandler(String, STRING_CLONER);
+		this.#registerInternalHandler(Number, NUMBER_CLONER);
+		this.#registerInternalHandler(Boolean, BOOLEAN_CLONER);
+		this.#registerInternalHandler(Symbol, SYMBOL_CLONER);
+		this.#registerInternalHandler(BigInt, BIGINT_CLONER);
 
-		this.registerInternalHandler(Array, ARRAY_CLONER);
-		this.registerInternalHandler(Object, OBJECT_CLONER);
+		this.#registerInternalHandler(Array, ARRAY_CLONER);
+		this.#registerInternalHandler(Object, OBJECT_CLONER);
 
-		this.registerInternalHandler(Date, DATE_CLONER);
-		this.registerInternalHandler(Set, SET_CLONER);
-		this.registerInternalHandler(Map, MAP_CLONER);
-		this.registerInternalHandler(RegExp, REGEXP_CLONE_HANDLER);
+		this.#registerInternalHandler(Date, DATE_CLONER);
+		this.#registerInternalHandler(Set, SET_CLONER);
+		this.#registerInternalHandler(Map, MAP_CLONER);
+		this.#registerInternalHandler(RegExp, REGEXP_CLONE_HANDLER);
 
-		this.registerInternalHandler(BigInt64Array, BIG_INT64_ARRAY_CLONER);
-		this.registerInternalHandler(BigUint64Array, BIG_UINT64_ARRAY_CLONER);
-		this.registerInternalHandler(Float16Array, FLOAT16_ARRAY_CLONER);
-		this.registerInternalHandler(Float32Array, FLOAT32_ARRAY_CLONER);
-		this.registerInternalHandler(Float64Array, FLOAT64_ARRAY_CLONER);
-		this.registerInternalHandler(Int8Array, INT8_ARRAY_CLONER);
-		this.registerInternalHandler(Int16Array, INT16_ARRAY_CLONER);
-		this.registerInternalHandler(Int32Array, INT32_ARRAY_CLONER);
-		this.registerInternalHandler(Uint8Array, UINT8_ARRAY_CLONER);
-		this.registerInternalHandler(Uint8ClampedArray, UINT8_CLAMPED_ARRAY_CLONER);
-		this.registerInternalHandler(Uint16Array, UINT16_ARRAY_CLONER);
-		this.registerInternalHandler(Uint32Array, UINT32_ARRAY_CLONER);
+		this.#registerInternalHandler(BigInt64Array, BIG_INT64_ARRAY_CLONER);
+		this.#registerInternalHandler(BigUint64Array, BIG_UINT64_ARRAY_CLONER);
+		this.#registerInternalHandler(Float16Array, FLOAT16_ARRAY_CLONER);
+		this.#registerInternalHandler(Float32Array, FLOAT32_ARRAY_CLONER);
+		this.#registerInternalHandler(Float64Array, FLOAT64_ARRAY_CLONER);
+		this.#registerInternalHandler(Int8Array, INT8_ARRAY_CLONER);
+		this.#registerInternalHandler(Int16Array, INT16_ARRAY_CLONER);
+		this.#registerInternalHandler(Int32Array, INT32_ARRAY_CLONER);
+		this.#registerInternalHandler(Uint8Array, UINT8_ARRAY_CLONER);
+		this.#registerInternalHandler(Uint8ClampedArray, UINT8_CLAMPED_ARRAY_CLONER);
+		this.#registerInternalHandler(Uint16Array, UINT16_ARRAY_CLONER);
+		this.#registerInternalHandler(Uint32Array, UINT32_ARRAY_CLONER);
 
-		this.registerInternalHandler(Error, ERROR_CLONER);
-		this.registerInternalHandler(AggregateError, AGGREGATE_ERROR_CLONER);
-		this.registerInternalHandler(EvalError, EVAL_ERROR_CLONER);
-		this.registerInternalHandler(RangeError, RANGE_ERROR_CLONER);
-		this.registerInternalHandler(ReferenceError, REFERENCE_ERROR_CLONER);
-		this.registerInternalHandler(SuppressedError, SUPRESSED_ERROR_CLONER);
-		this.registerInternalHandler(SyntaxError, SYNTAX_ERROR_CLONER);
-		this.registerInternalHandler(TypeError, TYPE_ERROR_CLONER);
-		this.registerInternalHandler(URIError, URI_ERROR_CLONER);
+		this.#registerInternalHandler(Error, ERROR_CLONER);
+		this.#registerInternalHandler(AggregateError, AGGREGATE_ERROR_CLONER);
+		this.#registerInternalHandler(EvalError, EVAL_ERROR_CLONER);
+		this.#registerInternalHandler(RangeError, RANGE_ERROR_CLONER);
+		this.#registerInternalHandler(ReferenceError, REFERENCE_ERROR_CLONER);
+		this.#registerInternalHandler(SuppressedError, SUPRESSED_ERROR_CLONER);
+		this.#registerInternalHandler(SyntaxError, SYNTAX_ERROR_CLONER);
+		this.#registerInternalHandler(TypeError, TYPE_ERROR_CLONER);
+		this.#registerInternalHandler(URIError, URI_ERROR_CLONER);
 
-		this.registerInternalHandler(ArrayBuffer, ARRAY_BUFFER_CLONER);
-		this.registerInternalHandler(SharedArrayBuffer, SHARED_ARRAY_BUFFER_CLONER);
-		this.registerInternalHandler(DataView, DATA_VIEW_CLONER);
+		this.#registerInternalHandler(ArrayBuffer, ARRAY_BUFFER_CLONER);
+		this.#registerInternalHandler(SharedArrayBuffer, SHARED_ARRAY_BUFFER_CLONER);
+		this.#registerInternalHandler(DataView, DATA_VIEW_CLONER);
 
 		if (typeof Temporal !== "undefined") {
-			this.registerInternalHandler(Temporal.Duration, TEMPORAL_DURATION_CLONER);
-			this.registerInternalHandler(Temporal.Instant, TEMPORAL_INSTANT_CLONER);
-			this.registerInternalHandler(Temporal.PlainDate, TEMPORAL_PLAIN_DATE_CLONER);
-			this.registerInternalHandler(Temporal.PlainDateTime, TEMPORAL_PLAIN_DATE_TIME_CLONER);
-			this.registerInternalHandler(Temporal.PlainMonthDay, TEMPORAL_PLAIN_MONTH_DAY_CLONER);
-			this.registerInternalHandler(Temporal.PlainTime, TEMPORAL_PLAIN_TIME_CLONER);
-			this.registerInternalHandler(Temporal.PlainYearMonth, TEMPORAL_PLAIN_YEAR_MONTH_CLONER);
-			this.registerInternalHandler(Temporal.ZonedDateTime, TEMPORAL_ZONED_DATE_TIME_CLONER);
+			this.#registerInternalHandler(Temporal.Duration, TEMPORAL_DURATION_CLONER);
+			this.#registerInternalHandler(Temporal.Instant, TEMPORAL_INSTANT_CLONER);
+			this.#registerInternalHandler(Temporal.PlainDate, TEMPORAL_PLAIN_DATE_CLONER);
+			this.#registerInternalHandler(Temporal.PlainDateTime, TEMPORAL_PLAIN_DATE_TIME_CLONER);
+			this.#registerInternalHandler(Temporal.PlainMonthDay, TEMPORAL_PLAIN_MONTH_DAY_CLONER);
+			this.#registerInternalHandler(Temporal.PlainTime, TEMPORAL_PLAIN_TIME_CLONER);
+			this.#registerInternalHandler(Temporal.PlainYearMonth, TEMPORAL_PLAIN_YEAR_MONTH_CLONER);
+			this.#registerInternalHandler(Temporal.ZonedDateTime, TEMPORAL_ZONED_DATE_TIME_CLONER);
 		}
 
-		this.registerInternalHandler(Cloner, CLONER_CLONER);
-		this.registerInternalHandler(ClonerError, CLONER_ERROR_CLONER);
+		this.#registerInternalHandler(Cloner, CLONER_CLONER);
+		this.#registerInternalHandler(ClonerError, CLONER_ERROR_CLONER);
 	}
 
 	/**
@@ -261,7 +261,7 @@ export class Cloner {
 				throw new ClonerError("Got a checker function, but is missing a cloning function");
 			}
 
-			this.registry.push({
+			this.#registry.push({
 				checker: handlerOrChecker,
 				clone,
 			} as CloneHandler<unknown>);
@@ -270,18 +270,18 @@ export class Cloner {
 		}
 
 		if (typeof handlerOrChecker.id === "string") {
-			if (this.registryWithIds.has(handlerOrChecker.id)) {
+			if (this.#registryWithIds.has(handlerOrChecker.id)) {
 				throw new ClonerError(
 					`A handler with the given ID of '${handlerOrChecker.id}' has already been registered`,
 				);
 			}
 
-			this.registryWithIds.set(handlerOrChecker.id, handlerOrChecker as CloneHandler<unknown>);
+			this.#registryWithIds.set(handlerOrChecker.id, handlerOrChecker as CloneHandler<unknown>);
 
 			return;
 		}
 
-		this.registry.push(handlerOrChecker as CloneHandler<unknown>);
+		this.#registry.push(handlerOrChecker as CloneHandler<unknown>);
 	}
 
 	/**
@@ -295,7 +295,7 @@ export class Cloner {
 			throw new ClonerError(`The specified ID '${id}' and handler ID '${handler.id}' do not match`);
 		}
 
-		this.registryWithIds.set(id, {
+		this.#registryWithIds.set(id, {
 			...handler,
 			id,
 		} as CloneHandler<unknown>);
@@ -305,10 +305,10 @@ export class Cloner {
 	 * Removed a handler from the ID based registry.
 	 */
 	public removeHandler(id: string): void {
-		this.registryWithIds.delete(id);
+		this.#registryWithIds.delete(id);
 	}
 
-	private readPrototypeConstructor(v: unknown): ConstructorFunction | null {
+	#readPrototypeConstructor(v: unknown): ConstructorFunction | null {
 		try {
 			return Object.getPrototypeOf(v).constructor;
 		} catch {
@@ -325,7 +325,7 @@ export class Cloner {
 		let hasCloned = false;
 		let cloned: T = value;
 
-		for (const handler of Array.from(this.registryWithIds.values()).concat(this.registry)) {
+		for (const handler of Array.from(this.#registryWithIds.values()).concat(this.#registry)) {
 			if (handler.checker(value)) {
 				cloned = handler.clone(value, this) as T;
 				hasCloned = true;
@@ -339,10 +339,10 @@ export class Cloner {
 				return cloned;
 			}
 
-			const constructorFunction = this.readPrototypeConstructor(value);
+			const constructorFunction = this.#readPrototypeConstructor(value);
 
 			if (constructorFunction) {
-				const cloner = this.internalRegistry.get(constructorFunction);
+				const cloner = this.#internalRegistry.get(constructorFunction);
 
 				if (cloner) {
 					cloned = cloner(value, this) as T;
