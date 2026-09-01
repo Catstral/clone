@@ -1,7 +1,7 @@
 {
 	"name": "@catstral/clone",
 	"version": "1.0.0",
-	"description": "Configurable JS/TS cloning and deepcloning utility ",
+	"description": "Configurable JS/TS cloning and deepcloning utility",
 	"license": "MIT",
 	"contributors": [
 		{
