@@ -87,6 +87,8 @@ export class Cloner {
 	 * Upon init of a cloner, that registry will be synced to the registry of that instance.
 	 *
 	 * Do note that after init of a cloner, if something is registered here it will not be part of that instance.
+	 *
+	 * @throws {ClonerError} If the given handler has an ID that has already been registered.
 	 */
 	public static registerHandler<T>(handler: CloneHandler<T>): void;
 	public static registerHandler<T>(checker: CloneHandlerChecker<T>, clone: CloneHandlerClone<T>): void;
@@ -130,7 +132,7 @@ export class Cloner {
 	 *
 	 * Do note that after init of a cloner, if something is registered here it will not be part of that instance.
 	 *
-	 * @throws If the specified ID does not equal the ID found inside the handler object (Only applies if that ID inside the handler is specified).
+	 * @throws {ClonerError} If the specified ID does not equal the ID found inside the handler object (Only applies if that ID inside the handler is specified).
 	 */
 	public static sethandler<T>(id: string, handler: CloneHandler<T>) {
 		if (typeof handler.id === "string" && id !== handler.id) {
@@ -248,6 +250,8 @@ export class Cloner {
 	/**
 	 * Registers a new handler to the registry. If that handler has an ID, then it will be synced to an ID based registry
 	 * and can then be removed/replaced later on. If no ID is used, then it will always exist in that registry.
+	 *
+	 * @throws {ClonerError} If the given handler has an ID that has already been registered.
 	 */
 	public registerHandler<T>(this: Cloner, handler: CloneHandler<T>): void;
 	public registerHandler<T>(this: Cloner, checker: CloneHandlerChecker<T>, clone: CloneHandlerClone<T>): void;
@@ -288,7 +292,7 @@ export class Cloner {
 	 * Sets a new handler in the ID based registry, allowing it to be removed/replaced later on.
 	 * If a handler already exists in this registry with that ID, then it is replaced.
 	 *
-	 * @throws If the specified ID does not equal the ID found inside the handler object (Only applies if that ID inside the handler is specified).
+	 * @throws {ClonerError} If the specified ID does not equal the ID found inside the handler object (Only applies if that ID inside the handler is specified).
 	 */
 	public sethandler<T>(id: string, handler: CloneHandler<T>) {
 		if (typeof handler.id === "string" && id !== handler.id) {
@@ -320,6 +324,8 @@ export class Cloner {
 	 * Deep-clone a value.
 	 *
 	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
+	 *
+	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
 	 */
 	public clone<T>(this: Cloner, value: T, strict = false): T {
 		let hasCloned = false;
