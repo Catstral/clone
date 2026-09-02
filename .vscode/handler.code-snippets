@@ -1,0 +1,15 @@
+{
+	"Clone handler": {
+		"prefix": "clone-handler",
+		"description": "A clone handler",
+		"body": [
+			"import type { CloneHandler } from \"~/cloner.ts\";",
+			"",
+			"export const $1_CLONE_HANDLER = {",
+			"\tchecker: (v) => $3,",
+			"\tclone: (v) => ${4:v},",
+			"} satisfies CloneHandler<$2>",
+			"",
+		]
+	}
+}
