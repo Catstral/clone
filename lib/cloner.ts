@@ -47,6 +47,12 @@ import { TEMPORAL_ZONED_DATE_TIME_CLONER } from "./handlers/temporal/zonedDateTi
 
 type ConstructorFunction = ((...args: never) => unknown) | (new (...args: never) => unknown);
 
+export interface CloneHandlerCloneContext {
+	cloner: Cloner;
+	type: "DEEP" | "SHALLOW";
+	strict: boolean;
+}
+
 /**
  * A function to check if a value should be cloned by a given handler.
  */
@@ -54,7 +60,7 @@ export type CloneHandlerChecker<T> = (value: unknown) => value is T;
 /**
  * A function to clone a given value for a handler.
  */
-export type CloneHandlerClone<T> = (value: T, cloner: Cloner) => T;
+export type CloneHandlerClone<T> = (value: T, context: CloneHandlerCloneContext) => T;
 
 /**
  * A custom clone handler.
@@ -320,29 +326,13 @@ export class Cloner {
 		}
 	}
 
-	/**
-	 * Deep-clone a value.
-	 *
-	 * @throws {ClonerError} If any value is missing a handler, it will throw intead of clone.
-	 */
-	public cloneStrict<T>(this: Cloner, value: T): T {
-		return this.clone(value, true);
-	}
-
-	/**
-	 * Deep-clone a value.
-	 *
-	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
-	 *
-	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
-	 */
-	public clone<T>(this: Cloner, value: T, strict = false): T {
+	#handleClone<T>(this: Cloner, value: T, context: CloneHandlerCloneContext): T {
 		let hasCloned = false;
 		let cloned: T = value;
 
 		for (const handler of Array.from(this.#registryWithIds.values()).concat(this.#registry)) {
 			if (handler.checker(value)) {
-				cloned = handler.clone(value, this) as T;
+				cloned = handler.clone(value, context) as T;
 				hasCloned = true;
 
 				break;
@@ -360,16 +350,66 @@ export class Cloner {
 				const cloner = this.#internalRegistry.get(constructorFunction);
 
 				if (cloner) {
-					cloned = cloner(value, this) as T;
+					cloned = cloner(value, context) as T;
 					hasCloned = true;
 				}
 			}
 		}
 
-		if (!hasCloned && strict) {
+		if (!hasCloned && context.strict) {
 			throw new ClonerError("The given value doesn't have a cloner specified for it.");
 		}
 
 		return cloned;
+	}
+
+	/**
+	 * Deep-clone a value.
+	 *
+	 * @throws {ClonerError} If any value is missing a handler, it will throw intead of clone.
+	 */
+	public cloneStrict<T>(this: Cloner, value: T): T {
+		return this.clone(value, true);
+	}
+
+	/**
+	 * Deep-clone a value.
+	 *
+	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
+	 *
+	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
+	 */
+	public clone<T>(this: Cloner, value: T, strict = false): T {
+		return this.deep(value, strict);
+	}
+
+	/**
+	 * Deep-clone a value.
+	 *
+	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
+	 *
+	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
+	 */
+	public deep<T>(value: T, strict = false): T {
+		return this.#handleClone(value, {
+			cloner: this,
+			type: "DEEP",
+			strict,
+		});
+	}
+
+	/**
+	 * Shallow-clone a value.
+	 *
+	 * Do note that if `strict` is not specified/false then any value that isn't cloned will be returned as is.
+	 *
+	 * @throws {ClonerError} If any value is missing a handler and strict mode is enabled, it will throw intead of clone.
+	 */
+	public shallow<T>(value: T, strict = false): T {
+		return this.#handleClone(value, {
+			cloner: this,
+			type: "SHALLOW",
+			strict,
+		});
 	}
 }

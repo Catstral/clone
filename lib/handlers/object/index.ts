@@ -1,7 +1,7 @@
 import type { CloneHandlerClone } from "~/cloner.ts";
 import { ClonerError } from "~/error";
 
-export const OBJECT_CLONER = ((v, cloner) => {
+export const OBJECT_CLONER = ((v, context) => {
 	const cloned: Record<string | number | symbol, unknown> = {};
 
 	// NOTE: cannot use `Object.entries` as that only includes enumerable keys.
@@ -17,7 +17,22 @@ export const OBJECT_CLONER = ((v, cloner) => {
 		}
 
 		Object.defineProperty(cloned, key, descriptor);
-		cloned[key] = cloner.clone(v[key]);
+
+		switch (context.type) {
+			case "DEEP": {
+				cloned[context.cloner.deep(key, context.strict)] = context.cloner.deep(v[key], context.strict);
+
+				break;
+			}
+			case "SHALLOW": {
+				cloned[key] = v[key];
+
+				break;
+			}
+			default: {
+				throw new ClonerError(`Failed to determine the context type for cloning, got: ${context.type}`);
+			}
+		}
 	}
 
 	return cloned;
