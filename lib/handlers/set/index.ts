@@ -4,22 +4,30 @@ import { ClonerError } from "~/error";
 export const SET_CLONER = ((v, context) => {
 	const cloned = new Set();
 
-	for (const value of v) {
-		switch (context.type) {
-			case "DEEP": {
-				cloned.add(context.cloner.deep(value, context.strict));
+	let callback: (item: unknown) => void;
 
-				break;
-			}
-			case "SHALLOW": {
-				cloned.add(value);
+	switch (context.type) {
+		case "DEEP": {
+			callback = (item) => {
+				cloned.add(context.cloner.deep(item, context.strict));
+			};
 
-				break;
-			}
-			default: {
-				throw new ClonerError(`Failed to determine the context type for cloning, got: ${context.type}`);
-			}
+			break;
 		}
+		case "SHALLOW": {
+			callback = (item) => {
+				cloned.add(item);
+			};
+
+			break;
+		}
+		default: {
+			throw new ClonerError(`Failed to determine the context type for cloning, got: ${context.type}`);
+		}
+	}
+
+	for (const item of v) {
+		callback(item);
 	}
 
 	return cloned;

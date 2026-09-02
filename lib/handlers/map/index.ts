@@ -4,22 +4,30 @@ import { ClonerError } from "~/error";
 export const MAP_CLONER = ((v, context) => {
 	const cloned = new Map();
 
-	for (const [key, value] of v.entries()) {
-		switch (context.type) {
-			case "DEEP": {
-				cloned.set(context.cloner.deep(key, context.strict), context.cloner.deep(value, context.strict));
+	let callback: (key: unknown, item: unknown) => void;
 
-				break;
-			}
-			case "SHALLOW": {
-				cloned.set(key, value);
+	switch (context.type) {
+		case "DEEP": {
+			callback = (key, item) => {
+				cloned.set(context.cloner.deep(key, context.strict), context.cloner.deep(item, context.strict));
+			};
 
-				break;
-			}
-			default: {
-				throw new ClonerError(`Failed to determine the context type for cloning, got: ${context.type}`);
-			}
+			break;
 		}
+		case "SHALLOW": {
+			callback = (key, item) => {
+				cloned.set(key, item);
+			};
+
+			break;
+		}
+		default: {
+			throw new ClonerError(`Failed to determine the context type for cloning, got: ${context.type}`);
+		}
+	}
+
+	for (const [key, item] of v.entries()) {
+		callback(key, item);
 	}
 
 	return cloned;
